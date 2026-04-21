@@ -1,0 +1,6 @@
+{
+  "name": "Invoice Processing Tool (IPT)",
+  "description": "An AI-powered tool to extract, process, and analyze invoices from PDFs and images with interactive dashboards and multi-format exports.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": []
+}

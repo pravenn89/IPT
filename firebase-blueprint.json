@@ -1,0 +1,35 @@
+{
+  "entities": {
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Extracted invoice data and compliance status",
+      "type": "object",
+      "properties": {
+        "invoiceNumber": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "vendorName": { "type": "string" },
+        "taxAmount": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "category": { "type": "string" },
+        "itcStatus": { "type": "string", "enum": ["Eligible", "Blocked"] },
+        "itcReason": { "type": "string" },
+        "natureOfService": { "type": "string" },
+        "tdsSection": { "type": "string" },
+        "tdsRate": { "type": "string" },
+        "tdsApplicable": { "type": "string", "enum": ["Yes", "No"] },
+        "fileName": { "type": "string" },
+        "status": { "type": "string", "enum": ["processing", "completed", "error"] },
+        "userId": { "type": "string", "description": "The UID of the owner" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "vendorName", "totalAmount", "status"]
+    }
+  },
+  "firestore": {
+    "users/{userId}/invoices/{invoiceId}": {
+      "schema": "Invoice",
+      "description": "User-specific invoice records"
+    }
+  }
+}

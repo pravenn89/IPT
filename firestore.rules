@@ -1,0 +1,61 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Standard Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidInvoice(data) {
+      return data.userId == request.auth.uid &&
+             data.vendorName is string && data.vendorName.size() <= 200 &&
+             data.totalAmount is number &&
+             data.status in ['processing', 'completed', 'error'] &&
+             (!('itcStatus' in data) || data.itcStatus in ['Eligible', 'Blocked']) &&
+             (!('tdsApplicable' in data) || data.tdsApplicable in ['Yes', 'No']);
+    }
+
+    // Collection: Invoices
+    match /users/{userId}/invoices/{invoiceId} {
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      
+      allow create: if isSignedIn() && isOwner(userId) && 
+                      isValidId(invoiceId) && 
+                      isValidInvoice(incoming()) &&
+                      incoming().createdAt == request.time;
+      
+      allow update: if isSignedIn() && isOwner(userId) && 
+                      isValidInvoice(incoming()) &&
+                      incoming().userId == existing().userId &&
+                      incoming().createdAt == existing().createdAt &&
+                      incoming().updatedAt == request.time &&
+                      // Basic field check to prevent shadow fields
+                      incoming().keys().hasAll(['invoiceNumber', 'date', 'vendorName', 'totalAmount', 'status', 'userId', 'createdAt', 'updatedAt']);
+                      
+      allow delete: if isSignedIn() && isOwner(userId);
+    }
+  }
+}
